@@ -817,11 +817,9 @@ func (m *DbMap) createTables(ifNotExists bool) error {
 
 		// use the transaction if it's there. otherwise, use the db connection.
 		if m.Tx != nil {
-			fmt.Println("Using the Transaction")
 			_, err = m.Tx.Exec(s.String())
 		}
 		else {
-			fmt.Println("Using the database")
 			_, err = m.Exec(s.String())			
 		}
 
@@ -886,7 +884,14 @@ func (m *DbMap) dropTableImpl(table *TableMap, addIfExists bool) (err error) {
 	if addIfExists {
 		ifExists = " if exists"
 	}
-	_, err = m.Exec(fmt.Sprintf("drop table%s %s;", ifExists, m.Dialect.QuotedTableForQuery(table.SchemaName, table.TableName)))
+
+	// use the transaction if it's there. otherwise, use the db connection.
+	if m.Tx != nil {
+		_, err = m.Tx.Exec(fmt.Sprintf("drop table%s %s;", ifExists, m.Dialect.QuotedTableForQuery(table.SchemaName, table.TableName)))
+	} else {
+		_, err = m.Exec(fmt.Sprintf("drop table%s %s;", ifExists, m.Dialect.QuotedTableForQuery(table.SchemaName, table.TableName)))
+	}
+
 	return err
 }
 
