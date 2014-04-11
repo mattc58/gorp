@@ -818,8 +818,7 @@ func (m *DbMap) createTables(ifNotExists bool) error {
 		// use the transaction if it's there. otherwise, use the db connection.
 		if m.Tx != nil {
 			_, err = m.Tx.Exec(s.String())
-		}
-		else {
+		} else {
 			_, err = m.Exec(s.String())			
 		}
 
