@@ -106,6 +106,9 @@ type DbMap struct {
 	// Db handle to use with this map
 	Db *sql.DB
 
+	// Transaction handle to use with this map
+	Tx *sql.Tx
+
 	// Dialect implementation to use with this map
 	Dialect Dialect
 
@@ -811,7 +814,17 @@ func (m *DbMap) createTables(ifNotExists bool) error {
 		s.WriteString(") ")
 		s.WriteString(m.Dialect.CreateTableSuffix())
 		s.WriteString(";")
-		_, err = m.Exec(s.String())
+
+		// use the transaction if it's there. otherwise, use the db connection.
+		if m.Tx != nil {
+			fmt.Println("Using the Transaction")
+			_, err = m.Tx.Exec(s.String())
+		}
+		else {
+			fmt.Println("Using the database")
+			_, err = m.Exec(s.String())			
+		}
+
 		if err != nil {
 			break
 		}
