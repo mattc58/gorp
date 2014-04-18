@@ -295,6 +295,10 @@ func (m MySQLDialect) ToSqlType(val reflect.Type, maxsize int, isAutoIncr bool) 
 		if val.Elem().Kind() == reflect.Uint8 {
 			return "mediumblob"
 		}
+	case reflect.Array:
+		if val.Elem().Kind() == reflect.Uint8 {
+			return fmt.Sprintf("binary(%d)", val.Len())
+		}
 	}
 
 	switch val.Name() {
