@@ -106,6 +106,9 @@ type DbMap struct {
 	// Db handle to use with this map
 	Db *sql.DB
 
+	// Transaction handle to use with this map
+	Tx *sql.Tx
+
 	// Dialect implementation to use with this map
 	Dialect Dialect
 
@@ -811,7 +814,14 @@ func (m *DbMap) createTables(ifNotExists bool) error {
 		s.WriteString(") ")
 		s.WriteString(m.Dialect.CreateTableSuffix())
 		s.WriteString(";")
-		_, err = m.Exec(s.String())
+
+		// use the transaction if it's there. otherwise, use the db connection.
+		if m.Tx != nil {
+			_, err = m.Tx.Exec(s.String())
+		} else {
+			_, err = m.Exec(s.String())			
+		}
+
 		if err != nil {
 			break
 		}
@@ -873,7 +883,14 @@ func (m *DbMap) dropTableImpl(table *TableMap, addIfExists bool) (err error) {
 	if addIfExists {
 		ifExists = " if exists"
 	}
-	_, err = m.Exec(fmt.Sprintf("drop table%s %s;", ifExists, m.Dialect.QuotedTableForQuery(table.SchemaName, table.TableName)))
+
+	// use the transaction if it's there. otherwise, use the db connection.
+	if m.Tx != nil {
+		_, err = m.Tx.Exec(fmt.Sprintf("drop table%s %s;", ifExists, m.Dialect.QuotedTableForQuery(table.SchemaName, table.TableName)))
+	} else {
+		_, err = m.Exec(fmt.Sprintf("drop table%s %s;", ifExists, m.Dialect.QuotedTableForQuery(table.SchemaName, table.TableName)))
+	}
+
 	return err
 }
 
